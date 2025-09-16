@@ -1,10 +1,21 @@
 import requests
+from typing import Optional
 from abc import ABC, abstractmethod
+from pydantic import BaseModel
+
+
+# ----------
+# Response Schemas
+# ----------
+class LlmResponseSchema(BaseModel):
+    model: str
+    think: Optional[str]
+    response: str
 
 
 class Llm(ABC):
     @abstractmethod
-    def invoke(self, prompt: str, system: str = None):
+    def invoke(self, prompt: str, system: str = None) -> LlmResponseSchema:
         raise NotImplementedError()
 
 
@@ -14,7 +25,7 @@ class Ollama(Llm):
         self.model = model
         self.thinking = thinking
 
-    def invoke(self, prompt: str, system: str = None):
+    def invoke(self, prompt: str, system: str = None) -> LlmResponseSchema:
         messages = []
 
         if system is not None:
@@ -42,7 +53,18 @@ class Ollama(Llm):
         # get the body
         body = resp.json()
 
-        return body
+        out = LlmResponseSchema(
+            model=body['model'],
+            response=body['message']['content'],
+            think=None,
+        )
+
+        if self.thinking:
+            parts = out.response.split("</think>", 1)
+            out.think = parts[0].removeprefix("<think>").strip()
+            out.response = parts[1].strip()
+
+        return out
 
 
 class ExpertPrompt(Llm):
@@ -51,7 +73,7 @@ class ExpertPrompt(Llm):
 
 if __name__ == "__main__":
     # llm = Ollama("qwen3:14b")
-    llm = Ollama("deepseek-r1:14b")
+    llm = Ollama("deepseek-r1:14b", thinking=True)
     print("processing...")
 
     print(llm.invoke("How are you doing?"))

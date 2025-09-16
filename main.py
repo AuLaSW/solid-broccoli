@@ -22,7 +22,11 @@ Team 1
             - What the bidders need to do
 
 SMART Requirements:
-- 
+- Specific
+- Measurable
+- Achievable
+- Relevant
+- Time-Bound
 """
 import llm
 import os
