@@ -29,6 +29,7 @@ SMART Requirements:
 - Time-Bound
 """
 import llm, prompts
+import itertools
 import os
 
 MODEL = os.getenv("SMART_MODEL")
@@ -40,6 +41,9 @@ def main(*emails):
 
 
 def generate_smart_requirements(*emails: str):
+    options = {
+        "num_ctx": 40000,
+    }
     # pass in email-chain to generate requirements
     email_chain = "\n---\n".join(emails)
 
@@ -64,40 +68,98 @@ def generate_smart_requirements(*emails: str):
         system="""You will be provided with a list of
     requirements, both explicit and implicit. Please generate a full list of
     requirements that incorporate both the implicit and explicit requirements
-    as a single list of requirements."""
+    as a single list of requirements.""",
+        options=options
     )
+
+    with open("out/extracted.json", 'w') as fp:
+        json.dump(extracted.model_dump(), fp)
+
     combination = LLM_VAR.invoke(
         prompt=extracted.response,
         system="""You will be provided with a list of
     requirements, both explicit and implicit. Please generate a full list of
     requirements that incorporate both the implicit and explicit requirements
-    as a single list of requirements."""
+    as a single list of requirements.""",
+        options=options,
     )
 
-    # get the body of the requirements
-    requirements = combination.response
+    with open("out/combination.json", 'w') as fp:
+        json.dump(combination, fp)
 
     smart_requirements = LLM_VAR.invoke(
         prompt=combination.response,
         system=prompts.SMART_SYNTH,
+        options=options,
     )
 
-    print("===== SMART REQUIREMENTS GENERATED =====")
-    print(smart_requirements.response)
-    print()
+    with open("out/smart_requirements.json", 'w') as fp:
+        json.dump(combination.model_dump(), fp)
 
     eval = LLM_VAR.invoke(
         prompt=smart_requirements.response,
         system=prompts.SMART_AUDIT,
+        options=options,
     )
 
-    print("===== SMART EVALS GENERATED =====")
-    print(eval.response)
-    print()
+    with open("out/eval.json", 'w') as fp:
+        json.dump(combination.model_dump(), fp)
+
+    json_eval = LLM_VAR.invoke(
+        prompt=eval.response,
+        system="""You will be provided with a list of corrections for SMART
+        requirmenets. They all have a specific format and need to be converted
+        to JSON for easier processing by a machine. The conversion should follow
+        the following example:
+
+        ### Requirement Review
+
+        R-003 - Status: NEEDS WORK
+        S: PASS
+        M: PASS
+        A: PASS
+        R: PASS
+        T: PASS
+        Flags: Vague Terms
+        Fix: [fix-text]
+        Acceptance Criteria:
+          - Given multiple users editing a task simultaneously
+          - When one user saves an update
+          - Then all users see an updated task within <=1 sec
+
+        ### Output
+
+        {
+            "id": 3,
+            "Status": "NEEDS WORK",
+            "S": "PASS",
+            "M": "PASS",
+            "A": "PASS",
+            "R": "PASS",
+            "T": "PASS",
+            "Flags": [
+                "Vague Terms"
+            ],
+            "Fix": "[fix-text]",
+            "Acceptance Criteria": [
+                "Given multiple users editing a task simultaneously",
+                "When one user saves an update",
+                "Then all users see an updated task within <=1 sec",
+            ]
+        }
+
+        Only return the json and nothing else.
+        If there are multiple requirements, return a list of json objects.
+        """,
+        options=options,
+    )
+
+    with open("out/eval.json", 'w') as fp:
+        json.dump(json_eval.model_dump(), fp)
 
 
 if __name__ == "__main__":
     import json
     with open("data/emails.json", 'r') as fp:
         emails = json.load(fp)
-    main(*emails)
+    main(*list(itertools.chain(*emails)))

@@ -25,7 +25,7 @@ class Ollama(Llm):
         self.model = model
         self.thinking = thinking
 
-    def invoke(self, prompt: str, system: str = None) -> LlmResponseSchema:
+    def invoke(self, prompt: str, system: str = None, **options) -> LlmResponseSchema:
         messages = []
 
         if system is not None:
@@ -45,13 +45,14 @@ class Ollama(Llm):
                 "model": self.model,
                 "messages": messages,
                 "stream": False,
-            }
+            } | options
         )
 
         # raise an error if one occured
         resp.raise_for_status()
         # get the body
         body = resp.json()
+        print(body)
 
         out = LlmResponseSchema(
             model=body['model'],
@@ -59,7 +60,7 @@ class Ollama(Llm):
             think=None,
         )
 
-        if self.thinking:
+        if self.thinking and out.response.startswith("<think>"):
             parts = out.response.split("</think>", 1)
             out.think = parts[0].removeprefix("<think>").strip()
             out.response = parts[1].strip()
