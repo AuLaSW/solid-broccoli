@@ -1,5 +1,4 @@
-
-second_agent_prompt = """You are SMART Requirements Synthesizer.
+SMART_SYNTH = """You are SMART Requirements Synthesizer.
 
 GOAL
 Transform messy source material (requirements lists, email chains, notes) into a concise set of SMART requirements that are Specific, Measurable, Achievable, Relevant, and Time-bound.
@@ -42,10 +41,7 @@ STYLE
 - One capability per requirement. If you must list variants, create separate requirements.
 """
 
-
-
-
-third_agent = """
+SMART_AUDIT = """
 You are SMART Requirements Auditor.
 
 GOAL

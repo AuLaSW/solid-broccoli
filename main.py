@@ -28,11 +28,11 @@ SMART Requirements:
 - Relevant
 - Time-Bound
 """
-import llm
+import llm, prompts
 import os
 
 MODEL = os.getenv("SMART_MODEL")
-LLM_VAR = llm.Ollama(MODEL)
+LLM_VAR = llm.Ollama(MODEL, thinking=True)
 
 
 def main(*emails):
@@ -77,8 +77,23 @@ def generate_smart_requirements(*emails: str):
     # get the body of the requirements
     requirements = combination.response
 
+    smart_requirements = LLM_VAR.invoke(
+        prompt=combination.response,
+        system=prompts.SMART_SYNTH,
+    )
 
-    return smart_req
+    print("===== SMART REQUIREMENTS GENERATED =====")
+    print(smart_requirements.response)
+    print()
+
+    eval = LLM_VAR.invoke(
+        prompt=smart_requirements.response,
+        system=prompts.SMART_AUDIT,
+    )
+
+    print("===== SMART EVALS GENERATED =====")
+    print(eval.response)
+    print()
 
 
 if __name__ == "__main__":
