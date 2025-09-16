@@ -43,23 +43,17 @@ def generate_smart_requirements(*emails: str):
     # pass in email-chain to generate requirements
     email_chain = "\n---\n".join(emails)
 
-    # SMART requirements? How do we generate that?
-    # S - 
-    # M - aintainable
-    # A - ttainable
-    # R - elevant
-    # T - echnical
-    # 
-    # Generate an expert for each factor? Generate list of requirements from
-    # the email chain, then determine if they are SMART. Alright.
-
-    # Architecture
+    # Base Architecture
     # 1. Generate Expert (expert at converting plain-text to requirements list)
     # 2. Extract Requirements
     #   a. Implicit (implied requirements)
     #   b. Explicit (explicit requirements)
     # 3. Combine explicit and implicit requirements into Full Requirements
     # 4. Take Full Requirements and generate SMART requirements
+
+    # ------
+    # We need to be able to correct for errors
+    # ------
 
     # ------
     # 1. Generate experts
@@ -81,7 +75,7 @@ def generate_smart_requirements(*emails: str):
     # 3. Combine Explicit and Implicit requirements
     # ------
     extracted = extraction.invoke(email_chain)
-    requiremnts = combination.invoke(extracted)
+    requirements = combination.invoke(extracted.response)
     # requirements = combination.invoke(extraction.invoke(email_chain))
 
 
@@ -89,14 +83,14 @@ def generate_smart_requirements(*emails: str):
 
 
 class LLM:
-    def __init__(self, llm: None, system: str):
+    def __init__(self, llm: llm.Llm, system: str = ""):
         self.definition = system
         if llm is None:
             raise Exception("LLM must not be None")
         self.llm = llm
 
-    def invoke(self, prompt: str):
-        ouptut = llm.invoke(system=self.system, prompt=prompt)
+    def invoke(self, prompt: str) -> llm.LlmResponseSchema:
+        output = self.llm.invoke(system=self.definition, prompt=prompt)
         return output
 
 
