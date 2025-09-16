@@ -52,55 +52,33 @@ def generate_smart_requirements(*emails: str):
     # 4. Take Full Requirements and generate SMART requirements
 
     # ------
-    # We need to be able to correct for errors
-    # ------
-
-    # ------
     # 1. Generate experts
     # ------
-    extraction = LLM(llm=LLM_VAR, system="""Given a list of emails from project managers,
-    techincal leads, and others deciding requirements for a contract to be sent
-    out for bid for a company, determine both the explicit requirments read in
-    the emails and the implicit requirements needed to understand the explicit
-    requirements (requiremnts that may be implied by the users but not directly
-    stated in the emails)""")
-
-    combination = LLM(llm=LLM_VAR, system="""You will be provided with a list of
-    requirements, both explicit and implicit. Please generate a full list of
-    requirements that incorporate both the implicit and explicit requirements
-    as a single list of requirements.""")
 
     # ------
     # 2. Extract Requirements
     # 3. Combine Explicit and Implicit requirements
     # ------
-    extracted = extraction.invoke(email_chain)
-    requirements = combination.invoke(extracted.response)
-    # requirements = combination.invoke(extraction.invoke(email_chain))
+    extracted = LLM_VAR.invoke(
+        prompt=email_chain,
+        system="""You will be provided with a list of
+    requirements, both explicit and implicit. Please generate a full list of
+    requirements that incorporate both the implicit and explicit requirements
+    as a single list of requirements."""
+    )
+    combination = LLM_VAR.invoke(
+        prompt=extracted.response,
+        system="""You will be provided with a list of
+    requirements, both explicit and implicit. Please generate a full list of
+    requirements that incorporate both the implicit and explicit requirements
+    as a single list of requirements."""
+    )
+
+    # get the body of the requirements
+    requirements = combination.response
 
 
     return smart_req
-
-
-class LLM:
-    def __init__(self, llm: llm.Llm, system: str = ""):
-        self.definition = system
-        if llm is None:
-            raise Exception("LLM must not be None")
-        self.llm = llm
-
-    def invoke(self, prompt: str) -> llm.LlmResponseSchema:
-        output = self.llm.invoke(system=self.definition, prompt=prompt)
-        return output
-
-
-class SmartLLM:
-    def __init__(self, llm: None):
-        self.llm = llm
-
-
-    def get_smart_requirements(prompt: str):
-        pass
 
 
 if __name__ == "__main__":
