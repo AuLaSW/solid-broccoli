@@ -25,6 +25,10 @@ SMART Requirements:
 - 
 """
 import llm
+import os
+
+MODEL = os.getenv("SMART_MODEL")
+LLM_VAR = llm.Ollama(MODEL)
 
 
 def main(*emails):
@@ -56,14 +60,14 @@ def generate_smart_requirements(*emails: str):
     # ------
     # 1. Generate experts
     # ------
-    extraction = LLM(llm=None, system="""Given a list of emails from project managers,
+    extraction = LLM(llm=LLM_VAR, system="""Given a list of emails from project managers,
     techincal leads, and others deciding requirements for a contract to be sent
     out for bid for a company, determine both the explicit requirments read in
     the emails and the implicit requirements needed to understand the explicit
     requirements (requiremnts that may be implied by the users but not directly
     stated in the emails)""")
 
-    combination = LLM(llm=None, system="""You will be provided with a list of
+    combination = LLM(llm=LLM_VAR, system="""You will be provided with a list of
     requirements, both explicit and implicit. Please generate a full list of
     requirements that incorporate both the implicit and explicit requirements
     as a single list of requirements.""")
@@ -73,13 +77,9 @@ def generate_smart_requirements(*emails: str):
     # 3. Combine Explicit and Implicit requirements
     # ------
     extracted = extraction.invoke(email_chain)
-    requirements = combination.invoke(extraction.invoke(email_chain))
+    requiremnts = combination.invoke(extracted)
+    # requirements = combination.invoke(extraction.invoke(email_chain))
 
-    # ------
-    # 4. Take Full Requirements and generate SMART Requirements
-    # ------
-    smart = SmartLLM(llm=None)
-    smart_req = smart.get_smart_requirements(requirements)
 
     return smart_req
 
