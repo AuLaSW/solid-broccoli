@@ -36,15 +36,10 @@ R-001: <single-line SMART statement>
     - ASSUMPTION: <provisional value or condition>
 
 Continue numbering R-002, R-003, etc.
-End with:
-END
 
 STYLE
 - Plain text, short sentences, active voice (“The system shall …”).
 - One capability per requirement. If you must list variants, create separate requirements.
-
-INPUT
-<<The user will provide the raw requirements or email chain here. Use only this content; do not invent domain facts beyond reasonable placeholders.>>
 """
 
 
@@ -132,12 +127,8 @@ Cross-cutting analysis:
 - Over-scoped items (multiple capabilities in one): <IDs>
 - Unmet dependencies or upstream data/baselines needed: <brief>
 
-End with:
-END
-
 STYLE
 - Plain text, short sentences, objective tone.
 - Do not invent domain facts; use placeholders when evidence is missing.
 - Prefer minimal edits that make a requirement verifiably SMART.
-
 """
